@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="th" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Treasure Island | แดชบอร์ดผู้ดูแล</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="flex items-center gap-3 text-amber-200"><i data-lucide="compass"></i><b>Treasure Island</b></div>
+      <nav class="grid gap-2 mt-8">
+        <a class="btn btn-ghost justify-start" href="index.html"><i data-lucide="gamepad-2"></i>หน้าเกม</a>
+        <button class="btn btn-warning justify-start" id="refreshDashboard"><i data-lucide="refresh-cw"></i>รีเฟรช</button>
+        <button class="btn btn-outline btn-warning justify-start" id="exportAll"><i data-lucide="download"></i>ส่งออก XLSX</button>
+      </nav>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-header">
+        <div>
+          <p class="uppercase tracking-[0.25em] text-xs text-amber-300">แดชบอร์ดงานวิจัย</p>
+          <h1>การวิเคราะห์การเรียนรู้</h1>
+        </div>
+        <div class="filters">
+          <input id="adminUsername" class="input input-bordered" placeholder="ชื่อผู้ดูแล">
+          <input id="adminPassword" class="input input-bordered" placeholder="รหัสผ่าน" type="password">
+          <button id="adminLogin" class="btn btn-warning">เชื่อมต่อ</button>
+        </div>
+      </header>
+
+      <section class="kpi-grid">
+        <div class="metric"><span>ผู้เล่น</span><b id="kpiPlayers">0</b></div>
+        <div class="metric"><span>AS เฉลี่ย</span><b id="kpiAC">0</b></div>
+        <div class="metric"><span>MS เฉลี่ย</span><b id="kpiMC">0</b></div>
+        <div class="metric"><span>LPS เฉลี่ย</span><b id="kpiLPS">0</b></div>
+        <div class="metric"><span>ผลของการช่วยเหลือ</span><b id="kpiMediation">0%</b></div>
+      </section>
+
+      <section class="dashboard-grid">
+        <div class="dash-panel"><h2>การกระจายคะแนน AS / MS / LPS</h2><canvas id="scoreChart"></canvas></div>
+        <div class="dash-panel"><h2>ฉากที่ยากที่สุด</h2><canvas id="difficultyChart"></canvas></div>
+        <div class="dash-panel"><h2>สถิติการเลือกคำตอบ</h2><canvas id="choiceChart"></canvas></div>
+        <div class="dash-panel"><h2>เส้นทางการแตกแขนง</h2><canvas id="pathChart"></canvas></div>
+      </section>
+
+      <section class="dash-panel mt-6">
+        <div class="flex flex-col md:flex-row md:items-center gap-3 justify-between mb-4">
+          <h2>ความคืบหน้าผู้เล่น</h2>
+          <div class="filters">
+            <input id="searchUsers" class="input input-bordered" placeholder="ค้นหาผู้ใช้">
+            <select id="completionFilter" class="select select-bordered">
+              <option value="all">ทั้งหมด</option>
+              <option value="complete">จบเกมแล้ว</option>
+              <option value="active">กำลังเล่น</option>
+            </select>
+            <button id="exportFiltered" class="btn btn-outline btn-warning"><i data-lucide="file-spreadsheet"></i>ส่งออกตามตัวกรอง</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead><tr><th>ผู้ใช้</th><th>ฉาก</th><th>AS</th><th>MS</th><th>LPS</th><th>เวลาบันทึก</th><th>สถานะ</th></tr></thead>
+            <tbody id="progressRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dash-panel mt-6">
+        <div class="flex flex-col md:flex-row md:items-center gap-3 justify-between mb-4">
+          <h2>สรุปคะแนนรายบุคคล</h2>
+          <p class="text-sm text-stone-400">คะแนนรวมรายผู้เล่นจากฉากที่มีการคิดคะแนนและบันทึกการช่วยเหลือ</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>ผู้ใช้</th>
+                <th>จำนวนฉากที่คิดคะแนน</th>
+                <th>AS รวม</th>
+                <th>MS รวม</th>
+                <th>LPS</th>
+                <th>จำนวนครั้งที่ใช้การช่วยเหลือ</th>
+              </tr>
+            </thead>
+            <tbody id="individualSummaryRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="dash-panel mt-6">
+        <div class="flex flex-col md:flex-row md:items-center gap-3 justify-between mb-4">
+          <h2>รายละเอียดการเลือกคำตอบรายบุคคล</h2>
+          <p class="text-sm text-stone-400">ข้อมูลระดับตัวเลือกสำหรับฉาก CTQ, CT2 และ DAH</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>ผู้ใช้</th>
+                <th>ฉาก</th>
+                <th>ประเภท</th>
+                <th>คำตอบแรก</th>
+                <th>คำตอบสุดท้าย</th>
+                <th>AS</th>
+                <th>MS</th>
+                <th>LPS</th>
+                <th>ใช้การช่วยเหลือ</th>
+                <th>เวลา</th>
+              </tr>
+            </thead>
+            <tbody id="scoredChoiceRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast" class="toast toast-top toast-end"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/export.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
